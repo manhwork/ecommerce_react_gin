@@ -1,6 +1,7 @@
 package server
 
 import (
+	"ecommerce_react_gin/internal/controller"
 	"net/http"
 
 	"github.com/gin-contrib/cors"
@@ -20,6 +21,14 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.GET("/", s.HelloWorldHandler)
 
 	r.GET("/health", s.healthHandler)
+
+	v1 := r.Group("/v1/api")
+	{
+		ProductRouter := v1.Group("/products-service")
+		{
+			ProductRouter.GET("/", controller.NewProductController().GetHomeProduct)
+		}
+	}
 
 	return r
 }
