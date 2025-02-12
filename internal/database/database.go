@@ -31,6 +31,10 @@ func New() *Service {
 	}
 }
 
+func (s *Service) GetCollection(collectionName string) *mongo.Collection {
+	return s.db.Database("product-management").Collection(collectionName)
+}
+
 func (s *Service) Health() map[string]string {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
