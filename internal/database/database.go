@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -12,32 +11,27 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type Service interface {
-	Health() map[string]string
-}
-
-type service struct {
+type Service struct {
 	db *mongo.Client
 }
 
 var (
-	host = os.Getenv("BLUEPRINT_DB_HOST")
-	port = os.Getenv("BLUEPRINT_DB_PORT")
+	uri = os.Getenv("BLUEPRINT_DB_URI")
 )
 
-func New() Service {
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s", host, port)))
+func New() *Service {
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
 
 	if err != nil {
 		log.Fatal(err)
 
 	}
-	return &service{
+	return &Service{
 		db: client,
 	}
 }
 
-func (s *service) Health() map[string]string {
+func (s *Service) Health() map[string]string {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 

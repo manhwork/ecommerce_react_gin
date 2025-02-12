@@ -1,4 +1,4 @@
-package controller
+package handler
 
 import (
 	"ecommerce_react_gin/internal/service"
@@ -16,7 +16,6 @@ func NewProductController() *ProductController {
 	}
 }
 
-// [GET] /v1/api/product
 func (pc *ProductController) GetHomeProduct(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"msg": "get all products",
