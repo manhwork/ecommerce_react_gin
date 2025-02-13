@@ -3,8 +3,10 @@ package repo
 import (
 	"context"
 	"ecommerce_react_gin/internal/database"
+	"ecommerce_react_gin/internal/models"
+	"log"
+	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -18,49 +20,79 @@ func NewProductRepo() *ProductRepo {
 	}
 }
 
-func (pr *ProductRepo) FindMany() ([]interface{}, error) {
-	cursor, err := pr.ProductCollection.Find(context.Background(), bson.M{})
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(context.Background())
+func (pr *ProductRepo) FindMany(filter interface{}) ([]models.ProductModel, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
 
-	var products []interface{}
-	if err = cursor.All(context.Background(), &products); err != nil {
+	productsList := []models.ProductModel{}
+
+	cursor, err := pr.ProductCollection.Find(ctx, filter)
+
+	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
-	return products, nil
+
+	for cursor.Next(ctx) {
+		var product models.ProductModel
+
+		err = cursor.Decode(&product)
+
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+
+		productsList = append(productsList, product)
+	}
+
+	return productsList, nil
 }
 
-func (pr *ProductRepo) Create(product interface{}) (*mongo.InsertOneResult, error) {
-	result, err := pr.ProductCollection.InsertOne(context.Background(), product)
+func (pr *ProductRepo) FindOne(filter interface{}) (*models.ProductModel, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	var product models.ProductModel
+
+	err := pr.ProductCollection.FindOne(ctx, filter).Decode(&product)
+
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
-	return result, nil
+
+	return &product, nil
 }
 
-func (pr *ProductRepo) FindOne(filter interface{}) (interface{}, error) {
-	var product interface{}
-	err := pr.ProductCollection.FindOne(context.Background(), filter).Decode(&product)
+func (pr *ProductRepo) Create(product *models.ProductModel) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	_, err := pr.ProductCollection.InsertOne(ctx, product)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return product, nil
+	return nil
 }
 
-func (pr *ProductRepo) Update(filter interface{}, update interface{}) (*mongo.UpdateResult, error) {
-	result, err := pr.ProductCollection.UpdateOne(context.Background(), filter, update)
+func (pr *ProductRepo) Update(filter interface{}, update interface{}) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	_, err := pr.ProductCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return err
 	}
-	return result, nil
+	return nil
 }
 
-func (pr *ProductRepo) Delete(filter interface{}) (*mongo.DeleteResult, error) {
-	result, err := pr.ProductCollection.DeleteOne(context.Background(), filter)
+func (pr *ProductRepo) Delete(filter interface{}) error {
+	_, err := pr.ProductCollection.DeleteOne(context.Background(), filter)
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return err
 	}
-	return result, nil
+	return nil
 }
