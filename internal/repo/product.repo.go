@@ -10,17 +10,25 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type ProductRepo struct {
+type ProductRepo interface {
+	FindMany(filter interface{}) ([]models.ProductModel, error)
+	FindOne(filter interface{}) (*models.ProductModel, error)
+	Create(product *models.ProductModel) error
+	Update(filter interface{}, update interface{}) error
+	Delete(filter interface{}) error
+}
+
+type productRepo struct {
 	ProductCollection *mongo.Collection
 }
 
-func NewProductRepo() *ProductRepo {
-	return &ProductRepo{
+func NewProductRepo() *productRepo {
+	return &productRepo{
 		ProductCollection: database.New().GetCollection("product"),
 	}
 }
 
-func (pr *ProductRepo) FindMany(filter interface{}) ([]models.ProductModel, error) {
+func (pr *productRepo) FindMany(filter interface{}) ([]models.ProductModel, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
@@ -49,7 +57,7 @@ func (pr *ProductRepo) FindMany(filter interface{}) ([]models.ProductModel, erro
 	return productsList, nil
 }
 
-func (pr *ProductRepo) FindOne(filter interface{}) (*models.ProductModel, error) {
+func (pr *productRepo) FindOne(filter interface{}) (*models.ProductModel, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
@@ -65,7 +73,7 @@ func (pr *ProductRepo) FindOne(filter interface{}) (*models.ProductModel, error)
 	return &product, nil
 }
 
-func (pr *ProductRepo) Create(product *models.ProductModel) error {
+func (pr *productRepo) Create(product *models.ProductModel) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
@@ -76,7 +84,7 @@ func (pr *ProductRepo) Create(product *models.ProductModel) error {
 	return nil
 }
 
-func (pr *ProductRepo) Update(filter interface{}, update interface{}) error {
+func (pr *productRepo) Update(filter interface{}, update interface{}) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
@@ -88,7 +96,7 @@ func (pr *ProductRepo) Update(filter interface{}, update interface{}) error {
 	return nil
 }
 
-func (pr *ProductRepo) Delete(filter interface{}) error {
+func (pr *productRepo) Delete(filter interface{}) error {
 	_, err := pr.ProductCollection.DeleteOne(context.Background(), filter)
 	if err != nil {
 		log.Println(err)

@@ -9,7 +9,7 @@ import (
 )
 
 type ProductController struct {
-	productService *service.ProductService
+	productService service.ProductService
 }
 
 func NewProductController() *ProductController {
