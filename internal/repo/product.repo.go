@@ -22,7 +22,7 @@ type productRepo struct {
 	ProductCollection *mongo.Collection
 }
 
-func NewProductRepo() *productRepo {
+func NewProductRepo() ProductRepo {
 	return &productRepo{
 		ProductCollection: database.New().GetCollection("product"),
 	}
